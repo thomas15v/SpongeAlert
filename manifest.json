@@ -2,7 +2,7 @@
     "manifest_version": 2,
 
     "name": "SpongeAlert",
-    "description": "Get alerts if somethings spongy happens",
+    "description": "Gives you an alert if something spongy happens",
     "version": "1.0",
     "background": {
       "scripts" : ["main.js"]
