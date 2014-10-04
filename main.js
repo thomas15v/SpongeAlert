@@ -9,6 +9,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 var badgetext = 0;
 var xhr = new XMLHttpRequest();
 var notificationmessages = ['mentioned', 'replied', 'quoted', 'edited', 'liked', 'private_message', 'invited_to_private_message', 'invitee_accepted', 'posted', 'moved_post','linked', 'granted_badge'];
+var unreadO = 0;
 
 update();
 check();
@@ -19,14 +20,17 @@ function check(){
         if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
             var data = JSON.parse(xhr.responseText);
             var unread = 0;
-            console.log(data);
             for (var key in data) {
-                console.log(data[key]);
                 if (data[key]['read'] == false){
                     unread += 1;
-                    //notify(data[key]);
                 }
 
+            }
+            console.log('Check result: ' + unread)
+            if(unread >= 1 && unread != unreadO){
+                setTimeout(function(){ unreadO = 0 }, 60000)
+                notify(unread, unread == 1 ? "alert" : "alerts", "http://forums.spongepowered.org/");
+                unreadO = unread;
             }
             badgetext = unread;
             update();
@@ -40,23 +44,17 @@ function check(){
 function update(){
     chrome.browserAction.setBadgeText({text: '' + badgetext});
 }
-
-function notify(data){
-    var id = "SA" + data['topic_id'] + ':' + data['post_number'] + data['notification_type'];
-    console.log(id);
-
-    chrome.notifications.create(id,{
-            type: 'basic',
-            iconUrl: 'icon.png',
-            title: 'Althe Frazon',
-            message: "Hi, what's going on tonight?",
-            buttons: [  { title: 'Call',
-                iconUrl: 'icon.png'},
-                { title: 'Send Email',
-                    iconUrl: 'icon.png'}],
-            priority: 0},
-        function() { /* Error checking goes here */}
-
+function notify(number, type, url) {
+    var notification = webkitNotifications.createNotification(
+        'icon.png',
+        'Attention:',
+            'You have ' + number + ' unread Sponge ' + type + '!'
     );
+    notification.show();
+    notification.onclick = function(tabs)  {
+        chrome.tabs.create({'url': url});
+        chrome.browserAction.setBadgeText({text: ''});
+        notification.cancel();
+    }
+    setTimeout(function() {notification.cancel()}, 20000);
 }
-
